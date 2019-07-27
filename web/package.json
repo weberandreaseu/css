@@ -7,7 +7,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "webpack",
         "watch": "webpack --watch",
-        "start": "webpack-dev-server --open"
+        "dev": "webpack-dev-server --open",
+        "start": "http-server dist"
     },
     "keywords": [],
     "author": "",
@@ -22,6 +23,7 @@
         "webpack-dev-server": "^3.7.2"
     },
     "dependencies": {
+        "http-server": "^0.11.1",
         "lodash": "^4.17.15"
     }
 }
