@@ -48,7 +48,22 @@
 import Warning from '@/components/Warning.vue'
 import ToogleButton from '@/components/ToogleButton.vue'
 import { InfluxDB } from 'influx'
-console.log('Influx: ' + InfluxDB)
+// console.log('Influx: ' + InfluxDB)
+
+const client = new InfluxDB({
+  database: 'css',
+  host: 'localhost',
+  port: 8086,
+  username: '',
+  password: ''
+})
+
+async function connect () {
+  const ping = await client.ping()
+  console.log(ping)
+}
+
+connect()
 
 export default {
   components: {
