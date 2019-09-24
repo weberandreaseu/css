@@ -8,9 +8,11 @@
 
     <Warning msg="Device does not support sensor access" />
 
+    <h3>Enter your data</h3>
+
     <p>
       Subject:
-      <input type="text" name="name" id="subject" value="Set a name" />
+      <input type="text" name="name" id="subject" :value="uuid()" />
     </p>
 
     <span>Select an activity:</span>
@@ -22,12 +24,8 @@
     </select>
 
     <h3>Start Recording</h3>
-    <!-- Rounded switch -->
+
     <ToogleButton/>
-    <!-- <label class="switch">
-      <input id="recordingButton" type="checkbox" disabled="true" />
-      <span class="slider round"></span>
-    </label> -->
 
     <div class="sensor-values">
       <p>
@@ -54,6 +52,16 @@ export default {
   components: {
     Warning,
     ToogleButton
+  },
+  methods: {
+    uuid: guidGenerator
   }
+}
+
+function guidGenerator() {
+    var S4 = function() {
+       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    };
+    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 }
 </script>
