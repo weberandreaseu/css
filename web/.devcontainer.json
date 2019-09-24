@@ -1,16 +1,21 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
 	"name": "Node.js 8",
-	"dockerFile": "Dockerfile",
+	// "dockerFile": "Dockerfile",
+	"dockerComposeFile": "../docker-compose.yml",
+	"service": "web",
+	"shutdownAction":"none",
 	
 	// Uncomment the next line if you want to publish any ports.
-	"appPort": [8080],
+	// "appPort": [8080],
+
+	"workspaceFolder": "/workspace/tacker/web",
 
 	// Uncomment the next line if you want to add in default container specific settings.json values
 	// "settings":  { "workbench.colorTheme": "Quiet Light" },
 
 	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "yarn install",
+	"postCreateCommand": "npm install",
 
 	"extensions": [
 		"dbaeumer.vscode-eslint",
