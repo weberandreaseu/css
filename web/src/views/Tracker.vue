@@ -47,6 +47,7 @@
 <script>
 import Warning from '@/components/Warning.vue'
 import ToogleButton from '@/components/ToogleButton.vue'
+// import Influx from 'influx'
 
 export default {
   components: {
@@ -58,10 +59,10 @@ export default {
   }
 }
 
-function guidGenerator() {
-    var S4 = function() {
-       return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-    };
-    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+function guidGenerator () {
+  var S4 = function () {
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+  }
+  return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
 }
 </script>

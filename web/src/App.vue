@@ -5,9 +5,9 @@
       <router-link to="/tracker">Tracker</router-link> |
       <router-link to="/demo">Demo</router-link>
     </div>
-    <dev class="container">
+    <div class="container">
       <router-view/>
-    </dev>
+    </div>
   </div>
 </template>
 
@@ -20,7 +20,6 @@ body {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* text-align: center; */
   color: #2c3e50;
 }
 #nav {
