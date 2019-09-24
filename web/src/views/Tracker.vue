@@ -47,7 +47,8 @@
 <script>
 import Warning from '@/components/Warning.vue'
 import ToogleButton from '@/components/ToogleButton.vue'
-// import Influx from 'influx'
+import { InfluxDB } from 'influx'
+console.log('Influx: ' + InfluxDB)
 
 export default {
   components: {
