@@ -9,7 +9,7 @@
 	// Uncomment the next line if you want to publish any ports.
 	// "appPort": [8080],
 
-	"workspaceFolder": "/workspace/tacker/web",
+	"workspaceFolder": "/workspace/tracker/web",
 
 	// Uncomment the next line if you want to add in default container specific settings.json values
 	// "settings":  { "workbench.colorTheme": "Quiet Light" },

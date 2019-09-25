@@ -1,9 +1,17 @@
 <template>
     <label class="switch">
-        <input id="recordingButton" type="checkbox" disabled="true" />
+        <input id="recordingButton" type="checkbox" v-bind:disabled="disabled" />
         <span class="slider round"></span>
     </label>
 </template>
+
+<script>
+export default {
+  props: {
+    disabled: Boolean
+  }
+}
+</script>
 
 <style>
 .switch {
