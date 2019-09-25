@@ -15,7 +15,7 @@
 
     <p>
       Subject:
-      <input type="text" name="name" id="subject" :value="uuid()" />
+      <input type="text" name="name" id="subject" :value="id" />
     </p>
 
     <span>Select an activity:</span>
@@ -40,15 +40,15 @@
     <div class="sensor-values">
       <p>
         Alpha:
-        <span id="alpha"></span>
+        <span id="alpha">{{ alpha }}</span>
       </p>
       <p>
         Beta:
-        <span id="beta"></span>
+        <span id="beta">{{ beta }}</span>
       </p>
       <p>
         Gamma:
-        <span id="gamma"></span>
+        <span id="gamma">{{ gamma }}</span>
       </p>
     </div>
   </div>
@@ -66,17 +66,26 @@ export default {
   // },
   data: function () {
     return {
-      isRecording: false
+      isRecording: false,
+      id: guidGenerator(),
+      counter: 0,
+      alpha: 0,
+      beta: 0,
+      gamma: 0
     }
   },
+  // TODO refactor recording in own component with create and destroy hook
+  // https://css-tricks.com/creating-vue-js-component-instances-programmatically/
   methods: {
     uuid: guidGenerator,
     startRecording: function () {
       this.isRecording = true
       console.log('Start recording')
+
     },
     stopRecording: function () {
       this.isRecording = false
+      this.counter = 0
       console.log('Stop recording')
     }
   },
@@ -84,8 +93,27 @@ export default {
     sensorSupport: function () {
       return window.DeviceOrientationEvent
     }
+  },
+  created: function () {
+    window.addEventListener('deviceorientation', (event) => {
+      if (!this.isRecording) return
+      this.alpha = event.alpha
+      this.beta = event.beta
+      this.gamma = event.gamma
+    })
+  },
+  destroyed: function () {
+    window.removeEventListener('deviceorientation', deviceOrientationHandler, false)
   }
 }
+
+// function deviceOrientationHandler (event) {
+//   this.alpha = event.alpha
+//   this.beta = event.beta
+//   this.gamma = event.gamma
+//   console.log(event)
+//   // samples.push(event.alpha, event.beta, event.gamma)
+// }
 
 const client = new InfluxDB({
   database: 'css',
@@ -112,12 +140,7 @@ function guidGenerator () {
 //   console.log('Start recording..')
 // }
 
-// function deviceOrientationHandler (event) {
-//   document.getElementById('alpha').innerText = event.alpha
-//   document.getElementById('beta').innerText = event.beta
-//   document.getElementById('gamma').innerText = event.gamma
-//   // samples.push(event.alpha, event.beta, event.gamma)
-// }
+
 
 // if (window.DeviceOrientationEvent) {
 //   // document.getElementById('recordingButton').disabled = false
