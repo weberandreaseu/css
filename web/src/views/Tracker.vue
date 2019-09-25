@@ -58,6 +58,14 @@
 // import Warning from '@/components/Warning.vue'
 // import ToogleButton from '@/components/ToogleButton.vue'
 import { InfluxDB } from 'influx'
+import Orientation from '../services/orientation'
+const orientation = new Orientation()
+console.log(orientation.mean())
+
+// TODO remove global variables
+const orientationData = new Orientation()
+var interval = null
+var sendCounter = 0
 
 export default {
   // components: {
@@ -81,12 +89,13 @@ export default {
     startRecording: function () {
       this.isRecording = true
       console.log('Start recording')
-
+      interval = setInterval(sendSamples, 1000 / 20)
     },
     stopRecording: function () {
       this.isRecording = false
       this.counter = 0
       console.log('Stop recording')
+      clearInterval(interval)
     }
   },
   computed: {
@@ -95,25 +104,19 @@ export default {
     }
   },
   created: function () {
+    // collect sensor data
     window.addEventListener('deviceorientation', (event) => {
       if (!this.isRecording) return
       this.alpha = event.alpha
       this.beta = event.beta
       this.gamma = event.gamma
+      orientationData.push(event)
     })
-  },
-  destroyed: function () {
-    window.removeEventListener('deviceorientation', deviceOrientationHandler, false)
   }
+  // destroyed: function () {
+  //   window.removeEventListener('deviceorientation', deviceOrientationHandler, false)
+  // }
 }
-
-// function deviceOrientationHandler (event) {
-//   this.alpha = event.alpha
-//   this.beta = event.beta
-//   this.gamma = event.gamma
-//   console.log(event)
-//   // samples.push(event.alpha, event.beta, event.gamma)
-// }
 
 const client = new InfluxDB({
   database: 'css',
@@ -129,27 +132,37 @@ async function ping () {
 }
 ping()
 
+async function sendSamples () {
+  if (orientationData.counter <= 0) { return }
+  sendCounter++
+  var values = orientationData.mean()
+  orientationData.reset()
+  var label = document.getElementById('label').value
+  var subject = document.getElementById('subject').value
+  client.writeMeasurement('orientation', [
+    {
+      key: 'orientation',
+      tags: {
+        label: label,
+        subject: subject
+      },
+      fields: {
+        count: sendCounter,
+        alpha: values[0],
+        beta: values[1],
+        gamma: values[2]
+      },
+      timestamp: (Date.now() * 1000000)
+    }
+  ])
+}
+
 function guidGenerator () {
   var S4 = function () {
     return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
   }
   return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
 }
-
-// function startRecording () {
-//   console.log('Start recording..')
-// }
-
-
-
-// if (window.DeviceOrientationEvent) {
-//   // document.getElementById('recordingButton').disabled = false
-//   // var support = document.getElementById('support')
-//   // console.log(support)
-//   // // support.innerText = 'Your device supports orientation'
-//   // // support.className = 'success'
-//   // window.addEventListener('deviceorientation', deviceOrientationHandler, false)
-// }
 
 </script>
 
