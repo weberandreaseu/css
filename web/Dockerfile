@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-FROM node:8
+FROM node:8 AS build-stage
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -36,3 +36,16 @@ RUN apt-get update \
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog
+
+# build static files
+WORKDIR /workspace/tracker/web
+COPY package*.json ./
+RUN npm install
+COPY ./ .
+RUN npm run build
+
+# build deploment image based on build of static files
+FROM nginx AS production-stage
+RUN mkdir /app
+COPY --from=build-stage /workspace/tracker/web/dist /app
+COPY nginx.conf /etc/nginx/nginx.conf
