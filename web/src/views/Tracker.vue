@@ -121,6 +121,7 @@ export default {
 const client = new InfluxDB({
   database: 'css',
   host: 'monitor.weberandreas.eu',
+  protocol: 'https',
   port: 8086,
   username: '',
   password: ''
