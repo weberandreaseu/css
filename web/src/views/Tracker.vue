@@ -21,9 +21,9 @@
     <span>Select an activity:</span>
     <select name="Activity" id="label" :disabled="isRecording">
       <option value="testing">Testing</option>
-      <option value="biking">Biking</option>
       <option value="sitting">Sitting</option>
       <option value="walking">Walking</option>
+      <option value="calling">Calling</option>
     </select>
 
     <h3>Start Recording</h3>
@@ -120,7 +120,7 @@ export default {
 
 const client = new InfluxDB({
   database: 'css',
-  host: 'localhost',
+  host: 'monitor.weberandreas.eu',
   port: 8086,
   username: '',
   password: ''
