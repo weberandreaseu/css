@@ -1,7 +1,9 @@
-version: '3'
+version: '3.4'
 services:
   web:
-    build: ./web
+    build:
+      context: ./web
+      target: build-stage
     ports:
       - "8080:8080"
     command: /bin/sh -c "while sleep 1000; do :; done"
