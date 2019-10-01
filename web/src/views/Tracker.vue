@@ -118,13 +118,14 @@ export default {
   // }
 }
 
+// const client = new InfluxDB('https://weberandreas.eu/influxdb')
 const client = new InfluxDB({
   database: 'css',
-  host: 'monitor.weberandreas.eu',
+  host: 'influxdb.weberandreas.eu',
   protocol: 'https',
-  port: 8086,
-  username: '',
-  password: ''
+  port: 443,
+  username: 'admin',
+  password: 'css-secret-password'
 })
 
 async function ping () {
