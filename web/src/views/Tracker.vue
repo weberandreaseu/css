@@ -13,11 +13,6 @@
 
     <h3>Enter your data</h3>
 
-    <p>
-      Subject:
-      <input type="text" name="name" id="subject" :value="id" />
-    </p>
-
     <span>Select an activity:</span>
     <select name="Activity" id="label" :disabled="isRecording">
       <option value="testing">Testing</option>
@@ -37,6 +32,7 @@
     </label> -->
     <!-- <ToogleButton/> -->
 
+    <p>Counter: {{ counter }}</p>
     <div class="sensor-values">
       <p>
         Alpha:
@@ -55,27 +51,13 @@
 </template>
 
 <script>
-// import Warning from '@/components/Warning.vue'
-// import ToogleButton from '@/components/ToogleButton.vue'
 import { InfluxDB } from 'influx'
 import Orientation from '../services/orientation'
-const orientation = new Orientation()
-console.log(orientation.mean())
-
-// TODO remove global variables
-const orientationData = new Orientation()
-var interval = null
-var sendCounter = 0
 
 export default {
-  // components: {
-  //   // Warning,
-  //   // ToogleButton
-  // },
   data: function () {
     return {
       isRecording: false,
-      id: guidGenerator(),
       counter: 0,
       alpha: 0,
       beta: 0,
@@ -85,17 +67,47 @@ export default {
   // TODO refactor recording in own component with create and destroy hook
   // https://css-tricks.com/creating-vue-js-component-instances-programmatically/
   methods: {
-    uuid: guidGenerator,
+    uuid: function () {
+      var S4 = function () {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+      }
+      return (S4() + '-' + S4() + '-' + S4())
+    },
     startRecording: function () {
       this.isRecording = true
+      this.id = this.uuid()
+      this.interval = setInterval(this.sendSamples, 1000 / 20)
+      this.orientation = new Orientation()
       console.log('Start recording')
-      interval = setInterval(sendSamples, 1000 / 20)
     },
     stopRecording: function () {
       this.isRecording = false
       this.counter = 0
       console.log('Stop recording')
-      clearInterval(interval)
+      clearInterval(this.interval)
+    },
+    sendSamples: function () {
+      if (this.orientation.counter <= 0) { return }
+      this.counter++
+      var values = this.orientation.mean()
+      this.orientation.reset()
+      var label = document.getElementById('label').value
+      this.client.writeMeasurement('orientation', [
+        {
+          key: 'orientation',
+          tags: {
+            label: label,
+            subject: this.id
+          },
+          fields: {
+            count: this.counter,
+            alpha: values[0],
+            beta: values[1],
+            gamma: values[2]
+          },
+          timestamp: (Date.now() * 1000000)
+        }
+      ])
     }
   },
   computed: {
@@ -104,68 +116,35 @@ export default {
     }
   },
   created: function () {
-    // collect sensor data
+    // create influxdb client
+    const client = new InfluxDB({
+      database: 'css',
+      host: 'influxdb.weberandreas.eu',
+      protocol: 'https',
+      port: 443,
+      username: 'admin',
+      password: 'css-secret-password'
+    })
+    this.client = client
+    // ping database to test connection
+    async function ping (client) {
+      const ping = await client.ping()
+      console.log('Ping influxdb status code: ' + ping[0].res.statusCode)
+    }
+    ping(this.client)
+    // register callback to collect sensor data
     window.addEventListener('deviceorientation', (event) => {
       if (!this.isRecording) return
       this.alpha = event.alpha
       this.beta = event.beta
       this.gamma = event.gamma
-      orientationData.push(event)
+      this.orientation.push(event)
     })
   }
   // destroyed: function () {
   //   window.removeEventListener('deviceorientation', deviceOrientationHandler, false)
   // }
 }
-
-// const client = new InfluxDB('https://weberandreas.eu/influxdb')
-const client = new InfluxDB({
-  database: 'css',
-  host: 'influxdb.weberandreas.eu',
-  protocol: 'https',
-  port: 443,
-  username: 'admin',
-  password: 'css-secret-password'
-})
-
-async function ping () {
-  const ping = await client.ping()
-  console.log(ping)
-}
-ping()
-
-async function sendSamples () {
-  if (orientationData.counter <= 0) { return }
-  sendCounter++
-  var values = orientationData.mean()
-  orientationData.reset()
-  var label = document.getElementById('label').value
-  var subject = document.getElementById('subject').value
-  client.writeMeasurement('orientation', [
-    {
-      key: 'orientation',
-      tags: {
-        label: label,
-        subject: subject
-      },
-      fields: {
-        count: sendCounter,
-        alpha: values[0],
-        beta: values[1],
-        gamma: values[2]
-      },
-      timestamp: (Date.now() * 1000000)
-    }
-  ])
-}
-
-function guidGenerator () {
-  var S4 = function () {
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
-  }
-  return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
-}
-
 </script>
 
 <style>
