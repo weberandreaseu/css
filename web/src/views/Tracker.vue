@@ -1,6 +1,6 @@
 <template>
   <div class="tracker">
-    <h1>CSS Motion Tracker</h1>
+    <h1>Motion Tracker</h1>
     <p>
       This app collects sensor data of your smartphone and sends them to an influx database.
       The labeled movement data will be used to train an activity classifier.
@@ -11,10 +11,8 @@
       <span v-else>Does not support device orientation</span>
     </div>
 
-    <h3>Enter your data</h3>
-
-    <span>Select an activity:</span>
-    <select name="Activity" id="label" :disabled="isRecording">
+    <h3>Select your activity:</h3>
+    <select v-model="activity" :disabled="isRecording">
       <option value="testing">Testing</option>
       <option value="sitting">Sitting</option>
       <option value="walking">Walking</option>
@@ -26,27 +24,12 @@
     <button v-if="isRecording" v-on:click="stopRecording()">Stop recording</button>
     <button v-else v-on:click="startRecording()" :disabled="!sensorSupport">Start recording</button>
 
-    <!-- <label class="switch">
-        <input id="recordingButton" type="checkbox" disabled="true" />
-        <span class="slider round"></span>
-    </label> -->
-    <!-- <ToogleButton/> -->
-
-    <p>Counter: {{ counter }}</p>
-    <div class="sensor-values">
-      <p>
-        Alpha:
-        <span id="alpha">{{ alpha }}</span>
-      </p>
-      <p>
-        Beta:
-        <span id="beta">{{ beta }}</span>
-      </p>
-      <p>
-        Gamma:
-        <span id="gamma">{{ gamma }}</span>
-      </p>
-    </div>
+    <ul class="sensor-values">
+      <li>Counter: {{ counter }}</li>
+      <li>Alpha: {{ alpha }}</li>
+      <li>Beta: {{ beta }}</li>
+      <li>Gamma: {{ gamma }}</li>
+    </ul>
   </div>
 </template>
 
@@ -58,14 +41,13 @@ export default {
   data: function () {
     return {
       isRecording: false,
+      activity: 'testing',
       counter: 0,
       alpha: 0,
       beta: 0,
       gamma: 0
     }
   },
-  // TODO refactor recording in own component with create and destroy hook
-  // https://css-tricks.com/creating-vue-js-component-instances-programmatically/
   methods: {
     uuid: function () {
       var S4 = function () {
@@ -91,12 +73,11 @@ export default {
       this.counter++
       var values = this.orientation.mean()
       this.orientation.reset()
-      var label = document.getElementById('label').value
       this.client.writeMeasurement('orientation', [
         {
           key: 'orientation',
           tags: {
-            label: label,
+            label: this.activity,
             subject: this.id
           },
           fields: {
@@ -162,5 +143,13 @@ export default {
     background-color: #c8ffdb;;
     border-left: 10px solid #00b528;
     color: #00b528;
+}
+
+ul.sensor-values {
+  list-style-type: none;
+  padding: 0;
+}
+ul.sensor-values li {
+  padding: 4px 0;
 }
 </style>
