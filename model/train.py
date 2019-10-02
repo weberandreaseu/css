@@ -51,7 +51,7 @@ def resample_dataset(df: pd.DataFrame, freq='1s') -> pd.DataFrame:
 
 # some measurments may contain nan because of few data for variance
 # drop them
-agg_data = resample_dataset(raw_data).dropna()
+agg_data = resample_dataset(raw_data, freq='1s').dropna()
 
 
 # %% [markdown]
@@ -61,10 +61,11 @@ agg_data = resample_dataset(raw_data).dropna()
 agg_data = agg_data[~(agg_data['label'] == 'testing')]
 
 
-def grouped_test_train_split(x, y, groups, test_size=0.3):
+def grouped_test_train_split(x, y, groups, test_size=0.3, random_state=0):
     """Splits dataset into test and train data without splitting groups"""
     unique_groups = np.unique(groups)
     n_test = max(int(len(unique_groups) * test_size), 1)
+    np.random.seed(random_state)
     selected_groups = np.random.choice(unique_groups, n_test)
     split_mask = np.in1d(groups, selected_groups)
     x_train = x[split_mask, :]
@@ -80,6 +81,7 @@ x_train, x_test, y_train, y_test = grouped_test_train_split(
     agg_data[features_agg].values,
     agg_data['label'].values,
     groups)
+assert len(np.unique(y_test)) == 3
 
 
 
