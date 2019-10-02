@@ -1,5 +1,6 @@
 # %%
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from influxdb import DataFrameClient
 from sklearn.tree import DecisionTreeClassifier
@@ -9,6 +10,7 @@ from sklearn.metrics import classification_report
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 from sklearn_porter import Porter
+from sklearn.model_selection import GroupKFold
 # %%
 client = DataFrameClient('influxdb.weberandreas.eu',
                          ssl=True,
@@ -17,10 +19,11 @@ client = DataFrameClient('influxdb.weberandreas.eu',
                          username='admin',
                          password='css-secret-password',
                          database='css')
-df: pd.DataFrame = client.query('SELECT * FROM "orientation"')['orientation']
+raw_data: pd.DataFrame = client.query(
+    'SELECT * FROM "orientation"')['orientation']
 
 # %%
-df.head()
+raw_data.head()
 
 # %% [markdown]
 
@@ -35,26 +38,50 @@ def mean_and_variance(frame: pd.DataFrame) -> pd.DataFrame:
     variance = frame.var()
     return pd.concat([mean, variance])
 
-grouper = df.groupby(['subject', pd.Grouper(freq='500ms')])
-resampled = grouper[features].apply(mean_and_variance)
-resampled.columns = features_agg
 
-# %%
-labels = df.drop_duplicates('subject').set_index('subject')['label']
-full = resampled.merge(labels, on='subject').set_index(resampled.index)
+def resample_dataset(df: pd.DataFrame, freq='1s') -> pd.DataFrame:
+    # resample to given frequency and aggragate to mean and variance of time window
+    grouper = df.groupby(['subject', pd.Grouper(freq=freq)])
+    resampled = grouper[features].apply(mean_and_variance)
+    # update columns names
+    resampled.columns = features_agg
+    # get subject labels and  merge them with resampled dataset
+    labels = df.drop_duplicates('subject').set_index('subject')['label']
+    return resampled.merge(labels, on='subject').set_index(resampled.index)
+
+# some measurments may contain nan because of few data for variance
+# drop them
+agg_data = resample_dataset(raw_data).dropna()
+
 
 # %% [markdown]
 
 # ## Select data
 # Filter testing data (not relevant for activity prediction)
-df = df[~(df['label'] == 'testing')]
+agg_data = agg_data[~(agg_data['label'] == 'testing')]
+
+
+def grouped_test_train_split(x, y, groups, test_size=0.3):
+    """Splits dataset into test and train data without splitting groups"""
+    unique_groups = np.unique(groups)
+    n_test = max(int(len(unique_groups) * test_size), 1)
+    selected_groups = np.random.choice(unique_groups, n_test)
+    split_mask = np.in1d(groups, selected_groups)
+    x_train = x[split_mask, :]
+    y_train = y[split_mask]
+    x_test = x[~split_mask, :]
+    y_test = y[~split_mask]
+    return x_train, x_test, y_train, y_test
+
 
 # test train split
-test_subjects = ['68b0-c95b-eb30', '9bf6-1846-2264',  # sitting
-                 'ff26-882b-dc2c', '9dfd-af56-2e0a',  # calling
-                 '7ad9-d1ee-6d2a', '5332-569d-0888']  # walking
-test = df[df['subject'].isin(test_subjects)]
-train = df[~df['subject'].isin(test_subjects)]
+groups = agg_data.index.get_level_values(0).values
+x_train, x_test, y_train, y_test = grouped_test_train_split(
+    agg_data[features_agg].values,
+    agg_data['label'].values,
+    groups)
+
+
 
 # ## Train classifier
 # %%
@@ -74,10 +101,9 @@ metrics = {
 scores = pd.DataFrame(columns=metrics.keys())
 
 for estimator_name, estimator in estimators.items():
-    estimator.fit(train[features], train['label'])
-    y_true = test['label'].ravel()
-    y_pred = estimator.predict(test[features])
-    model_scores = {name: metric(y_true, y_pred, average='weighted')
+    estimator.fit(x_train, y_train)
+    y_pred = estimator.predict(x_test)
+    model_scores = {name: metric(y_test, y_pred, average='weighted')
                     for name, metric in metrics.items()}
     model_scores['estimator'] = estimator_name
     scores = scores.append(model_scores, ignore_index=True)
@@ -90,9 +116,9 @@ plt.show()
 
 # ## Test classifier
 estimator = DecisionTreeClassifier()
-estimator.fit(train[features], train['label'])
-prediction = estimator.predict(test[features])
-report = classification_report(test['label'], prediction) #, output_dict=True)
+estimator.fit(x_train, y_train)
+y_pred = estimator.predict(x_test)
+report = classification_report(y_test, y_pred)  # , output_dict=True)
 print(report)
 # report = pd.DataFrame(report)
 # report['estimator'] = 'decision_tree'
