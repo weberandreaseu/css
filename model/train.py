@@ -24,9 +24,29 @@ df.head()
 
 # %% [markdown]
 
+# ## Data preparation
+# Aggregate time series in window and calculate mean and variance
+features = ['alpha', 'beta', 'gamma']
+features_agg = [f + '_mean' for f in features] + [f + '_var' for f in features]
+
+
+def mean_and_variance(frame: pd.DataFrame) -> pd.DataFrame:
+    mean = frame.mean()
+    variance = frame.var()
+    return pd.concat([mean, variance])
+
+grouper = df.groupby(['subject', pd.Grouper(freq='500ms')])
+resampled = grouper[features].apply(mean_and_variance)
+resampled.columns = features_agg
+
+# %%
+labels = df.drop_duplicates('subject').set_index('subject')['label']
+full = resampled.merge(labels, on='subject').set_index(resampled.index)
+
+# %% [markdown]
+
 # ## Select data
 # Filter testing data (not relevant for activity prediction)
-features = ['alpha', 'beta', 'gamma']
 df = df[~(df['label'] == 'testing')]
 
 # test train split
@@ -38,8 +58,6 @@ train = df[~df['subject'].isin(test_subjects)]
 
 # ## Train classifier
 # %%
-# window = pd.Timedelta('500ms')
-# df.resample(window).sum()
 
 estimators = {
     'dummy': DummyClassifier(),
