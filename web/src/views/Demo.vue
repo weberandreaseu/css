@@ -38,6 +38,20 @@ export default {
   }
 }
 
+if (typeof process !== 'undefined' && typeof process.argv !== 'undefined') {
+    if (process.argv.length - 2 === 3) {
+
+        // Features:
+        var features = process.argv.slice(2);
+
+        // Prediction:
+        var clf = new DecisionTreeClassifier();
+        var prediction = clf.predict(features);
+        console.log(prediction);
+
+    }
+}
+
 // var song = new Audio('https://www.bensound.org/bensound-music/bensound-happyrock.mp3')
 song.play()
 

@@ -8,6 +8,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
+from sklearn_porter import Porter
 # %%
 client = DataFrameClient('influxdb.weberandreas.eu',
                          ssl=True,
@@ -70,8 +71,21 @@ plt.show()
 # %% [markdown]
 
 # ## Test classifier
-
+estimator = DecisionTreeClassifier()
+estimator.fit(train[features], train['label'])
 prediction = estimator.predict(test[features])
-report = classification_report(test['label'], prediction, output_dict=True)
-report = pd.DataFrame(report)
-report['estimator'] = 'decision_tree'
+report = classification_report(test['label'], prediction) #, output_dict=True)
+print(report)
+# report = pd.DataFrame(report)
+# report['estimator'] = 'decision_tree'
+
+
+# %% [markdown]
+
+# ## Export model
+# Use sklearn porter to export trained model to java script.
+
+porter = Porter(estimator, language='js')
+output = porter.export(embed_data=True)
+with open('model.js', 'w') as file:
+    file.write(output)
