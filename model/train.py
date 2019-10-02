@@ -3,7 +3,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from influxdb import DataFrameClient
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.metrics import classification_report
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 # %%
 client = DataFrameClient('influxdb.weberandreas.eu',
                          ssl=True,
@@ -36,14 +40,38 @@ train = df[~df['subject'].isin(test_subjects)]
 # window = pd.Timedelta('500ms')
 # df.resample(window).sum()
 
-estimator = DecisionTreeClassifier()
-estimator.fit(train[features], train['label'])
+estimators = {
+    'dummy': DummyClassifier(),
+    'decision_tree': DecisionTreeClassifier(),
+    'svc': SVC(),
+    'random_forest': RandomForestClassifier()
+}
+metrics = {
+    # 'accuracy': accuracy_score,
+    'precesion': precision_score,
+    'recall': recall_score
+    # 'f1': f1_score
+}
+scores = pd.DataFrame(columns=metrics.keys())
+
+for estimator_name, estimator in estimators.items():
+    estimator.fit(train[features], train['label'])
+    y_true = test['label'].ravel()
+    y_pred = estimator.predict(test[features])
+    model_scores = {name: metric(y_true, y_pred, average='weighted')
+                    for name, metric in metrics.items()}
+    model_scores['estimator'] = estimator_name
+    scores = scores.append(model_scores, ignore_index=True)
+scores.set_index('estimator')
+# %%
+scores.plot.bar(x='estimator', rot=20)
+plt.show()
 
 # %% [markdown]
 
 # ## Test classifier
 
 prediction = estimator.predict(test[features])
-report = classification_report(test['label'], prediction)
-print(report)
-
+report = classification_report(test['label'], prediction, output_dict=True)
+report = pd.DataFrame(report)
+report['estimator'] = 'decision_tree'
