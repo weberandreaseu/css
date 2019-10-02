@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
 from sklearn_porter import Porter
-from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import GroupKFold, cross_val_score
 # %%
 client = DataFrameClient('influxdb.weberandreas.eu',
                          ssl=True,
@@ -49,9 +49,10 @@ def resample_dataset(df: pd.DataFrame, freq='1s') -> pd.DataFrame:
     labels = df.drop_duplicates('subject').set_index('subject')['label']
     return resampled.merge(labels, on='subject').set_index(resampled.index)
 
+
 # some measurments may contain nan because of few data for variance
 # drop them
-agg_data = resample_dataset(raw_data, freq='1s').dropna()
+agg_data = resample_dataset(raw_data, freq='1000ms').dropna()
 
 
 # %% [markdown]
@@ -70,24 +71,31 @@ def grouped_test_train_split(x, y, groups, test_size=0.3, random_state=0):
     split_mask = np.in1d(groups, selected_groups)
     x_train = x[split_mask, :]
     y_train = y[split_mask]
+    grp_train = groups[split_mask]
     x_test = x[~split_mask, :]
     y_test = y[~split_mask]
-    return x_train, x_test, y_train, y_test
+    grp_test = groups[~split_mask]
+    return x_train, x_test, y_train, y_test, grp_train, grp_test
 
 
 # test train split
 groups = agg_data.index.get_level_values(0).values
-x_train, x_test, y_train, y_test = grouped_test_train_split(
+x_train, x_test, y_train, y_test, grp_train, grp_test = grouped_test_train_split(
     agg_data[features_agg].values,
     agg_data['label'].values,
     groups)
 assert len(np.unique(y_test)) == 3
 
 
-
-# ## Train classifier
 # %%
+# ## Train classifier using Cross validation
+kfold = GroupKFold(n_splits=4,)
+tree = DecisionTreeClassifier()
+scores = cross_val_score(tree, x_train, y_train, groups=grp_train, cv=kfold)
+print(scores.mean())
 
+
+# %%
 estimators = {
     'dummy': DummyClassifier(),
     'decision_tree': DecisionTreeClassifier(),
