@@ -24,13 +24,13 @@ export default class Feature {
     this.alpha = []
     this.beta = []
     this.gamma = []
-    this.counter = []
+    this.counter = 0
   }
 
-  push (measurement) {
-    this.alpha.push(measurement.alpha)
-    this.beta.push(measurement.beta)
-    this.gamma.push(measurement.gamma)
+  push (features) {
+    this.alpha.push(features.alpha)
+    this.beta.push(features.beta)
+    this.gamma.push(features.gamma)
     this.counter++
   }
 
@@ -38,10 +38,13 @@ export default class Feature {
     this.alpha = []
     this.beta = []
     this.gamma = []
-    this.counter = []
+    this.counter = 0
   }
 
   getFeatures () {
+    if (this.counter < 1) {
+      return []
+    }
     const features = [
       mean(this.alpha),
       mean(this.beta),

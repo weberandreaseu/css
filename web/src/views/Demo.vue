@@ -29,6 +29,8 @@
 
 <script>
 import Orientation from '../services/orientation'
+import Feature from '../services/feature'
+
 // import {DecisionTreeClassifier} from '../../static/model.js'
 
 // var song = new Audio('https://www.bensound.org/bensound-music/bensound-thejazzpiano.mp3')
@@ -51,9 +53,16 @@ export default {
     //   song.currentTime = 0
     // },
     predictActivity: function () {
-      const features = this.orientation.mean()
-      this.orientation.reset()
-      this.activity = this.classifier.predict(features)
+      const features = this.feature.getFeatures()
+      if (features.length > 0)
+        this.activity = this.classifier.predict(features)
+    },
+    pushSensorData: function () {
+      if (this.orientation.counter > 0) {
+        const features = this.orientation.mean()
+        this.orientation.reset()
+        this.feature.push(features)
+      }
     }
   },
   computed: {
@@ -64,7 +73,11 @@ export default {
   created: function () {
     this.orientation = new Orientation()
     this.classifier = new DecisionTreeClassifier()
-    setInterval(this.predictActivity, 1000 / 20)
+    this.feature = new Feature()
+    // push sensor data 20 times per second
+    setInterval(this.pushSensorData, 1000 / 20)
+    // predect actifity each second
+    setInterval(this.predictActivity, 1000)
     window.addEventListener('deviceorientation', (event) => {
       this.alpha = event.alpha
       this.beta = event.beta

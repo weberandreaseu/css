@@ -18,7 +18,19 @@ export default class Orientation {
   }
 
   mean () {
-    if (this.counter > 0) { return [this.alpha / this.counter, this.beta / this.counter, this.gamma / this.counter] } else { return [0, 0, 0] }
+    if (this.counter > 0) {
+      return {
+        alpha: this.alpha / this.counter,
+        beta: this.beta / this.counter,
+        gamma: this.gamma / this.counter
+      }
+    } else {
+      return {
+        alpha: 0,
+        beta: 0,
+        gamma: 0
+      }
+    }
   }
 
   reset () {
