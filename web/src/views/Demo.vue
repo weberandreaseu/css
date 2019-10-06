@@ -31,6 +31,11 @@
 import Orientation from '../services/orientation'
 import Feature from '../services/feature'
 
+const labels = new Map([
+  [0, 'Calling'],
+  [1, 'Sitting'],
+  [2, 'Walking']
+])
 // import {DecisionTreeClassifier} from '../../static/model.js'
 
 // var song = new Audio('https://www.bensound.org/bensound-music/bensound-thejazzpiano.mp3')
@@ -54,8 +59,10 @@ export default {
     // },
     predictActivity: function () {
       const features = this.feature.getFeatures()
-      if (features.length > 0)
-        this.activity = this.classifier.predict(features)
+      if (features.length > 0) {
+        const y_pred = this.classifier.predict(features)
+        this.activity = labels.get(y_pred)
+      }
     },
     pushSensorData: function () {
       if (this.orientation.counter > 0) {
@@ -72,7 +79,7 @@ export default {
   },
   created: function () {
     this.orientation = new Orientation()
-    this.classifier = new DecisionTreeClassifier()
+    this.classifier = new RandomForestClassifier()
     this.feature = new Feature()
     // push sensor data 20 times per second
     setInterval(this.pushSensorData, 1000 / 20)
