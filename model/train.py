@@ -8,9 +8,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
 from sklearn.dummy import DummyClassifier
-from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score
+from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, make_scorer
 from sklearn_porter import Porter
 from sklearn.model_selection import GroupKFold, cross_val_score
+from sklearn.decomposition import PCA
+from sklearn.pipeline import make_pipeline
 # %%
 client = DataFrameClient('influxdb.weberandreas.eu',
                          ssl=True,
@@ -69,12 +71,12 @@ def grouped_test_train_split(x, y, groups, test_size=0.3, random_state=0):
     np.random.seed(random_state)
     selected_groups = np.random.choice(unique_groups, n_test)
     split_mask = np.in1d(groups, selected_groups)
-    x_train = x[split_mask, :]
-    y_train = y[split_mask]
-    grp_train = groups[split_mask]
-    x_test = x[~split_mask, :]
-    y_test = y[~split_mask]
-    grp_test = groups[~split_mask]
+    x_train = x[~split_mask, :]
+    y_train = y[~split_mask]
+    grp_train = groups[~split_mask]
+    x_test = x[split_mask, :]
+    y_test = y[split_mask]
+    grp_test = groups[split_mask]
     return x_train, x_test, y_train, y_test, grp_train, grp_test
 
 
@@ -89,24 +91,27 @@ assert len(np.unique(y_test)) == 3
 
 # %%
 # ## Train classifier using Cross validation
-kfold = GroupKFold(n_splits=4,)
-tree = DecisionTreeClassifier()
-scores = cross_val_score(tree, x_train, y_train, groups=grp_train, cv=kfold)
-print(scores.mean())
+# Cross validation with PCA was also tested, but without improvement
+kfold = GroupKFold(n_splits=3)
+tree = RandomForestClassifier(n_estimators=40, random_state=42)
+scores = cross_val_score(tree, x_train, y_train,
+                         scoring='f1_weighted', groups=grp_train, cv=kfold)
+print('f1 weighted: ', scores.mean())
 
 
 # %%
+# Compare some other models
 estimators = {
     'dummy': DummyClassifier(),
     'decision_tree': DecisionTreeClassifier(),
-    'svc': SVC(),
-    'random_forest': RandomForestClassifier()
+    'svc': SVC(gamma='scale'),
+    'random_forest': RandomForestClassifier(n_estimators=10)
 }
 metrics = {
     # 'accuracy': accuracy_score,
     'precesion': precision_score,
-    'recall': recall_score
-    # 'f1': f1_score
+    'recall': recall_score,
+    'f1': f1_score
 }
 scores = pd.DataFrame(columns=metrics.keys())
 
@@ -125,7 +130,7 @@ plt.show()
 # %% [markdown]
 
 # ## Test classifier
-estimator = DecisionTreeClassifier()
+estimator = RandomForestClassifier(n_estimators=40, random_state=42)
 estimator.fit(x_train, y_train)
 y_pred = estimator.predict(x_test)
 report = classification_report(y_test, y_pred)  # , output_dict=True)
@@ -140,6 +145,6 @@ print(report)
 # Use sklearn porter to export trained model to java script.
 
 porter = Porter(estimator, language='js')
-output = porter.export(embed_data=True)
+output = porter.export(embed_data=False)
 with open('model.js', 'w') as file:
     file.write(output)
