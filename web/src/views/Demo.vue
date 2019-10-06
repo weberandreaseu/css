@@ -17,7 +17,7 @@
     <p>Current activity: {{ activity }}</p>
 
     <button v-on:click="playSong()">Play song</button>
-    <button v-on:click="stopSong()">Stop song</button>
+    <button v-on:click="pauseSong()">Pause song</button>
 
     <ul class="sensor-values">
       <li>Alpha: {{ alpha }}</li>
@@ -30,38 +30,62 @@
 <script>
 import Orientation from '../services/orientation'
 import Feature from '../services/feature'
+import getSong from '../services/songs'
 
 const labels = new Map([
-  [0, 'Calling'],
-  [1, 'Sitting'],
-  [2, 'Walking']
+  [0, 'calling'],
+  [1, 'sitting'],
+  [2, 'walking']
 ])
-// import {DecisionTreeClassifier} from '../../static/model.js'
 
-// var song = new Audio('https://www.bensound.org/bensound-music/bensound-thejazzpiano.mp3')
-// song.play()
 export default {
   data: function () {
     return {
-      activity: 'testing',
+      activity: 'calling',
+      muted: false,
       alpha: 0,
       beta: 0,
       gamma: 0
     }
   },
   methods: {
-    // playSong: function () {
-    //   song.play()
-    // },
-    // stopSong: function () {
-    //   song.pause()
-    //   song.currentTime = 0
-    // },
+    playSong: function () {
+      this.muted = false
+      if (this.song && this.song.paused) {
+        this.song.play()
+      }
+    },
+    pauseSong: function () {
+      this.muted = true
+      if (this.song && !this.song.paused) {
+        this.song.pause()
+      }
+    },
     predictActivity: function () {
       const features = this.feature.getFeatures()
       if (features.length > 0) {
-        const y_pred = this.classifier.predict(features)
-        this.activity = labels.get(y_pred)
+        const yPred = this.classifier.predict(features)
+        const predActivity = labels.get(yPred)
+        const prevActivity = this.activity
+        this.activity = predActivity
+        // if muted no change required
+        if (this.muted) {
+          return
+        }
+        // if calling, pause song
+        if (predActivity === 'calling') {
+          if (this.song && !this.song.paused) {
+            this.song.pause()
+          }
+        // only change song if activity change
+        } else if (prevActivity !== predActivity) {
+          if (this.song && !this.song.paused) {
+            this.song.pause()
+          }
+          this.song = getSong(predActivity)
+          // resume the song or play
+          this.song.play()
+        }
       }
     },
     pushSensorData: function () {
@@ -93,5 +117,4 @@ export default {
     })
   }
 }
-// var song = new Audio('https://www.bensound.org/bensound-music/bensound-happyrock.mp3')
 </script>
