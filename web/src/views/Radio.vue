@@ -14,21 +14,18 @@
 
     <p>Move your smartphone to influce the music.</p>
 
+    <OrientationSupport/>
+
     <p>Current activity: {{ activity }}</p>
 
     <button v-on:click="playSong()">Play song</button>
     <button v-on:click="pauseSong()">Pause song</button>
-
-    <ul class="sensor-values">
-      <li>Alpha: {{ alpha }}</li>
-      <li>Beta: {{ beta }}</li>
-      <li>Gamma: {{ gamma }}</li>
-    </ul>
   </div>
 </template>
 
 <script>
 import Orientation from '../services/orientation'
+import OrientationSupport from '@/components/OrientationSupport'
 import Feature from '../services/feature'
 import getSong from '../services/songs'
 
@@ -39,13 +36,11 @@ const labels = new Map([
 ])
 
 export default {
+  components: { OrientationSupport },
   data: function () {
     return {
       activity: 'calling',
-      muted: false,
-      alpha: 0,
-      beta: 0,
-      gamma: 0
+      muted: false
     }
   },
   methods: {
@@ -107,12 +102,9 @@ export default {
     this.feature = new Feature()
     // push sensor data 20 times per second
     setInterval(this.pushSensorData, 1000 / 20)
-    // predect actifity each second
+    // predect activity each second
     setInterval(this.predictActivity, 1000)
     window.addEventListener('deviceorientation', (event) => {
-      this.alpha = event.alpha
-      this.beta = event.beta
-      this.gamma = event.gamma
       this.orientation.push(event)
     })
   }

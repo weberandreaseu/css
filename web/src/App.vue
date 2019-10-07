@@ -22,7 +22,6 @@
 <style>
 body {
   margin: 0;
-  /* padding: 15px; */
 }
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
@@ -50,6 +49,7 @@ footer {
   padding: 25px 15px;
   background-color: #353535;
   color: #ebebeb;
+  margin-top: 25px;
 }
 
 footer a {

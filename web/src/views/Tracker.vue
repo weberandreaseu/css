@@ -6,10 +6,11 @@
       The labeled movement data will be used to train an activity classifier.
     </p>
 
-    <div class="banner" v-bind:class="[ sensorSupport ? 'success' : 'warning' ]">
+    <OrientationSupport/>
+    <!-- <div class="banner" v-bind:class="[ sensorSupport ? 'success' : 'warning' ]">
       <span v-if="sensorSupport">Supports device orientation</span>
       <span v-else>Does not support device orientation</span>
-    </div>
+    </div> -->
 
     <h3>Select your activity:</h3>
     <select v-model="activity" :disabled="isRecording">
@@ -36,8 +37,10 @@
 <script>
 import { InfluxDB } from 'influx'
 import Orientation from '../services/orientation'
+import OrientationSupport from '@/components/OrientationSupport'
 
 export default {
+  components: { OrientationSupport },
   data: function () {
     return {
       isRecording: false,
@@ -129,22 +132,6 @@ export default {
 </script>
 
 <style>
-.banner {
-  padding: 20px;
-}
-
-.warning {
-    background-color: #ffe3e3;;
-    border-left: 10px solid #d9534f;
-    color: #d9534f;
-}
-
-.success {
-    background-color: #c7ffe6;
-    border-left: 10px solid #42b983;
-    color: #42b983;
-}
-
 ul.sensor-values {
   list-style-type: none;
   padding: 0;
