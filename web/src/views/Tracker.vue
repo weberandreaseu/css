@@ -140,9 +140,9 @@ export default {
 }
 
 .success {
-    background-color: #c8ffdb;;
-    border-left: 10px solid #00b528;
-    color: #00b528;
+    background-color: #c7ffe6;
+    border-left: 10px solid #42b983;
+    color: #42b983;
 }
 
 ul.sensor-values {
