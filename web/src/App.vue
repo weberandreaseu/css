@@ -4,7 +4,7 @@
       <div class="container">
         <router-link to="/">Home</router-link>
         <router-link to="/tracker">Tracker</router-link>
-        <router-link to="/demo">Demo</router-link>
+        <router-link to="/radio">Radio</router-link>
       </div>
     </div>
     <div class="container">

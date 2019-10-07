@@ -22,9 +22,9 @@ export default new Router({
       component: () => import(/* webpackChunkName: "tracker" */ './views/Tracker.vue')
     },
     {
-      path: '/demo',
-      name: 'demo',
-      component: () => import(/* webpackChunkName: "demo" */'./views/Demo.vue')
+      path: '/radio',
+      name: 'radio',
+      component: () => import(/* webpackChunkName: "radio" */'./views/Radio.vue')
     }
   ]
 })

@@ -1,12 +1,12 @@
 <template>
-  <div class="demo">
-    <h1>Song for mood</h1>
+  <div class="radio">
+    <h1>Adaptive Radio</h1>
 
-    <p>This app adapts the music style to your current context</p>
+    <p>The only radio station which adapts to your current activity:</p>
 
     <ul>
-      <li>Active when walking</li>
-      <li>Chill when sitting</li>
+      <li>Play rock when walking</li>
+      <li>Play jazz when sitting</li>
       <li>Mute when calling</li>
     </ul>
 
