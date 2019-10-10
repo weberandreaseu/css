@@ -85,9 +85,9 @@ export default {
           },
           fields: {
             count: this.counter,
-            alpha: values[0],
-            beta: values[1],
-            gamma: values[2]
+            alpha: values.alpha,
+            beta: values.beta,
+            gamma: values.gamma
           },
           timestamp: (Date.now() * 1000000)
         }
